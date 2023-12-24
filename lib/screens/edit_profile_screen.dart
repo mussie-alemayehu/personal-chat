@@ -5,6 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 
 import '../components/form_components.dart';
 import '../widgets/profile_picture_viewer.dart';
@@ -26,10 +29,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late NavigatorState navigator;
   late String name;
   late String username;
+  String? imageUrl;
   late ScaffoldMessengerState scaffoldMessenger;
   late ThemeData theme;
   late String uid;
   File? _pickedImage;
+
+  Future<File?> _getImageFile({String? url}) async {
+    if (url == null) {
+      return null;
+    }
+    http.Response response;
+    try {
+      response = await http.get(Uri.parse(url));
+    } catch (error) {
+      return null;
+    }
+    final tempDirectory = await getTemporaryDirectory();
+    File file = File(path.join(tempDirectory.path, '$uid.jpg'));
+    file.writeAsBytesSync(response.bodyBytes);
+    return file;
+  }
 
   Future<void> _saveForm() async {
     if (_pickedImage == null) {
@@ -52,7 +72,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _isLoading = true;
         });
         final uploadRef = FirebaseStorage.instance.ref('user_images');
-        uploadRef.child('/$uid.jpg').putFile(_pickedImage!);
+        await uploadRef
+            .child('/$uid.jpg')
+            .putFile(_pickedImage!)
+            .whenComplete(() => null);
         final downloadUrl = await uploadRef.child('/$uid.jpg').getDownloadURL();
         await FirebaseFirestore.instance.doc('users/$uid').update({
           'username': username,
@@ -107,108 +130,117 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
           child: FutureBuilder(
-              future: FirebaseFirestore.instance.doc('users/$uid').get(),
-              builder: (ctx, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting ||
-                    snapshot.data == null ||
-                    snapshot.data!.data() == null) {
-                  return const Center(
-                    child: CircularProgressIndicator.adaptive(),
-                  );
-                }
-                name = snapshot.data!.data()!.containsKey('name')
-                    ? snapshot.data!['name']
-                    : '';
-                username = snapshot.data!.data()!.containsKey('username')
-                    ? snapshot.data!['username']
-                    : '';
-                return Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 20),
-                      ProfilePictureViewer(
-                        pickedImage: _pickedImage,
-                        imagePicker: _imagePicker,
-                      ),
-                      const SizedBox(height: 50),
-                      FormComponents.buildTextFormField(
-                        context: context,
-                        initialValue: name,
-                        icon: const Icon(Icons.person),
-                        hintText: 'Name',
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'This field can\'t be empty.';
-                          }
-                          if (value.length < 4) {
-                            return 'Your name must be at least 4 characters long.';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          name = value!;
-                        },
-                      ),
-                      const SizedBox(height: 30),
-                      Text(
-                        'Enter a User Name that can be used to uniquely identify you on YouChat.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              color: Colors.white60,
-                            ),
-                      ),
-                      const SizedBox(height: 30),
-                      FormComponents.buildTextFormField(
-                        context: context,
-                        initialValue: username,
-                        icon: const Icon(Icons.person),
-                        hintText: 'User Name',
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'User Name can\'t be empty.';
-                          }
-                          if (value.length < 4) {
-                            return 'User Name must be at least 4 characters long.';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          username = value!;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary,
-                              ),
-                            ),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          ElevatedButton(
-                            onPressed: _saveForm,
-                            child: _isLoading
-                                ? const Padding(
-                                    padding:
-                                        EdgeInsets.symmetric(vertical: 3.0),
-                                    child: CircularProgressIndicator(),
-                                  )
-                                : const Text('Submit'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+            future: FirebaseFirestore.instance.doc('users/$uid').get(),
+            builder: (ctx, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting ||
+                  snapshot.data == null ||
+                  snapshot.data!.data() == null) {
+                return const Center(
+                  child: CircularProgressIndicator.adaptive(),
                 );
-              }),
+              }
+              name = snapshot.data!.data()!.containsKey('name')
+                  ? snapshot.data!['name']
+                  : '';
+              username = snapshot.data!.data()!.containsKey('username')
+                  ? snapshot.data!['username']
+                  : '';
+              imageUrl = snapshot.data!.data()!.containsKey('profile_picture')
+                  ? snapshot.data!['profile_picture']
+                  : null;
+
+              return Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    FutureBuilder(
+                      future: _getImageFile(url: imageUrl),
+                      builder: (ctx2, snapshot2) {
+                        return ProfilePictureViewer(
+                          pickedImage: _pickedImage ?? snapshot2.data,
+                          imagePicker: _imagePicker,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 50),
+                    FormComponents.buildTextFormField(
+                      context: context,
+                      initialValue: name,
+                      icon: const Icon(Icons.person),
+                      hintText: 'Name',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'This field can\'t be empty.';
+                        }
+                        if (value.length < 4) {
+                          return 'Your name must be at least 4 characters long.';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) {
+                        name = value!;
+                      },
+                    ),
+                    const SizedBox(height: 30),
+                    Text(
+                      'Enter a User Name that can be used to uniquely identify you on YouChat.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            color: Colors.white60,
+                          ),
+                    ),
+                    const SizedBox(height: 30),
+                    FormComponents.buildTextFormField(
+                      context: context,
+                      initialValue: username,
+                      icon: const Icon(Icons.person),
+                      hintText: 'User Name',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'User Name can\'t be empty.';
+                        }
+                        if (value.length < 4) {
+                          return 'User Name must be at least 4 characters long.';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) {
+                        username = value!;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        ElevatedButton(
+                          onPressed: _saveForm,
+                          child: _isLoading
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 3.0),
+                                  child: CircularProgressIndicator(),
+                                )
+                              : const Text('Submit'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
