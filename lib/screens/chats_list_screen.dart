@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'main_drawer.dart';
+import './main_drawer.dart';
 import '../widgets/user_list_item.dart';
 
 class ChatsListScreen extends StatelessWidget {
@@ -62,7 +62,6 @@ class ChatsListScreen extends StatelessWidget {
                   }
                 }).toList();
               }
-              print(chats.length);
               return CustomScrollView(
                 slivers: [
                   SliverAppBar(

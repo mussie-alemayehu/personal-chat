@@ -19,6 +19,7 @@ class FormComponents {
     required Widget icon,
     required String? Function(String? value)? validator,
     required void Function(String? value)? onSaved,
+    void Function(String? value)? onChanged,
     FocusNode? focusNode,
     void Function()? onEditingComplete,
     bool obscure = false,
@@ -46,6 +47,7 @@ class FormComponents {
         ),
       ),
       onEditingComplete: onEditingComplete,
+      onChanged: onChanged,
       validator: validator,
       onSaved: onSaved,
     );

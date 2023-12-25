@@ -5,12 +5,14 @@ import '../screens/chat_screen.dart';
 class UserListItem extends StatelessWidget {
   final String userName;
   final String uid;
+  final String? imageUrl;
   final String? lastMessage;
 
   const UserListItem({
     super.key,
     required this.userName,
     required this.uid,
+    this.imageUrl,
     this.lastMessage,
   });
 
@@ -24,8 +26,13 @@ class UserListItem extends StatelessWidget {
         color: Theme.of(context).colorScheme.secondary,
       ),
       child: ListTile(
-        leading: const CircleAvatar(
-          child: Text('A'),
+        leading: CircleAvatar(
+          backgroundImage: imageUrl != null ? NetworkImage(imageUrl!) : null,
+          child: imageUrl != null
+              ? null
+              : Text(
+                  userName.substring(0, 1),
+                ),
         ),
         title: Text(userName),
         subtitle: lastMessage == null ? null : Text(lastMessage!),

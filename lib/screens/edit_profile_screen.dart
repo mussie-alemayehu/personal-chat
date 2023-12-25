@@ -27,13 +27,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   var _isLoading = false;
   final _formKey = GlobalKey<FormState>();
   late NavigatorState navigator;
-  late String name;
-  late String username;
+  String name = '';
+  String username = '';
   String? imageUrl;
   late ScaffoldMessengerState scaffoldMessenger;
   late ThemeData theme;
   late String uid;
   File? _pickedImage;
+  File? _existingImage;
 
   Future<File?> _getImageFile({String? url}) async {
     if (url == null) {
@@ -51,8 +52,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return file;
   }
 
-  Future<void> _saveForm() async {
-    if (_pickedImage == null) {
+  Future<void> _saveForm(bool imageOk) async {
+    if (!imageOk) {
       scaffoldMessenger.showSnackBar(
         SnackBar(
           content: const Text('Please provide your profile picture.'),
@@ -71,17 +72,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         setState(() {
           _isLoading = true;
         });
-        final uploadRef = FirebaseStorage.instance.ref('user_images');
-        await uploadRef
-            .child('/$uid.jpg')
-            .putFile(_pickedImage!)
-            .whenComplete(() => null);
-        final downloadUrl = await uploadRef.child('/$uid.jpg').getDownloadURL();
-        await FirebaseFirestore.instance.doc('users/$uid').update({
-          'username': username,
-          'name': name,
-          'profile_picture': downloadUrl,
-        });
+        if (_pickedImage != null) {
+          final uploadRef = FirebaseStorage.instance.ref('user_images');
+          await uploadRef
+              .child('/$uid.jpg')
+              .putFile(_pickedImage!)
+              .whenComplete(() => null);
+          final downloadUrl =
+              await uploadRef.child('/$uid.jpg').getDownloadURL();
+          await FirebaseFirestore.instance.doc('users/$uid').update({
+            'username': username,
+            'name': name,
+            'profile_picture': downloadUrl,
+          });
+        } else {
+          await FirebaseFirestore.instance.doc('users/$uid').update({
+            'username': username,
+            'name': name,
+          });
+        }
       } catch (error) {
         scaffoldMessenger.showSnackBar(
           SnackBar(
@@ -139,12 +148,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: CircularProgressIndicator.adaptive(),
                 );
               }
-              name = snapshot.data!.data()!.containsKey('name')
-                  ? snapshot.data!['name']
-                  : '';
-              username = snapshot.data!.data()!.containsKey('username')
-                  ? snapshot.data!['username']
-                  : '';
+              if (name == '') {
+                name = snapshot.data!.data()!.containsKey('name')
+                    ? snapshot.data!['name']
+                    : '';
+              }
+              if (username == '') {
+                username = snapshot.data!.data()!.containsKey('username')
+                    ? snapshot.data!['username']
+                    : '';
+              }
               imageUrl = snapshot.data!.data()!.containsKey('profile_picture')
                   ? snapshot.data!['profile_picture']
                   : null;
@@ -158,8 +171,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     FutureBuilder(
                       future: _getImageFile(url: imageUrl),
                       builder: (ctx2, snapshot2) {
+                        _existingImage = snapshot2.data;
+
                         return ProfilePictureViewer(
-                          pickedImage: _pickedImage ?? snapshot2.data,
+                          pickedImage: _pickedImage ?? _existingImage,
                           imagePicker: _imagePicker,
                         );
                       },
@@ -170,12 +185,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       initialValue: name,
                       icon: const Icon(Icons.person),
                       hintText: 'Name',
+                      onChanged: (value) {
+                        if (value == null) {
+                          name = '';
+                        } else {
+                          name = value;
+                        }
+                      },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'This field can\'t be empty.';
-                        }
-                        if (value.length < 4) {
-                          return 'Your name must be at least 4 characters long.';
                         }
                         return null;
                       },
@@ -201,10 +220,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         if (value == null || value.isEmpty) {
                           return 'User Name can\'t be empty.';
                         }
-                        if (value.length < 4) {
-                          return 'User Name must be at least 4 characters long.';
-                        }
                         return null;
+                      },
+                      onChanged: (value) {
+                        if (value == null) {
+                          username = '';
+                        } else {
+                          username = value;
+                        }
                       },
                       onSaved: (value) {
                         username = value!;
@@ -226,7 +249,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           },
                         ),
                         ElevatedButton(
-                          onPressed: _saveForm,
+                          onPressed: () {
+                            bool isImageOk;
+                            if (_pickedImage == null &&
+                                _existingImage == null) {
+                              isImageOk = false;
+                            } else {
+                              isImageOk = true;
+                            }
+                            _saveForm(isImageOk);
+                          },
                           child: _isLoading
                               ? const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 3.0),
