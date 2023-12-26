@@ -13,7 +13,7 @@ class ChatsListScreen extends StatelessWidget {
   Stream<QuerySnapshot<Map<String, dynamic>>> _getChats() {
     final snapshot1 = FirebaseFirestore.instance
         .collection('chat_id')
-        .orderBy('lastMessage', descending: true)
+        .orderBy('lastMessageTime', descending: true)
         .snapshots();
 
     return snapshot1;

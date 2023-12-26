@@ -11,10 +11,9 @@ class Actions {
       'sentBy': sentBy,
       'time': DateTime.now().toIso8601String(),
     });
-    print('updating field lastMessage');
     await FirebaseFirestore.instance.doc('chat_id/$chatId').update(
       {
-        'lastMessage': DateTime.now().toIso8601String(),
+        'lastMessageTime': DateTime.now().toIso8601String(),
       },
     );
   }

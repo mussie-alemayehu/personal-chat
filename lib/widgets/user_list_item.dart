@@ -6,14 +6,14 @@ class UserListItem extends StatelessWidget {
   final String userName;
   final String uid;
   final String? imageUrl;
-  final String? lastMessage;
+  final String? lastMessageTime;
 
   const UserListItem({
     super.key,
     required this.userName,
     required this.uid,
     this.imageUrl,
-    this.lastMessage,
+    this.lastMessageTime,
   });
 
   @override
@@ -26,15 +26,17 @@ class UserListItem extends StatelessWidget {
         color: Theme.of(context).colorScheme.secondary,
       ),
       child: ListTile(
-        leading: CircleAvatar(
-          radius: 25,
-          child: ProfilePicture(
-            firstLetter: userName.substring(0, 1),
-            imageUrl: imageUrl,
-          ),
+        leading: ProfilePicture(
+          firstLetter: userName.substring(0, 1),
+          imageUrl: imageUrl,
         ),
         title: Text(userName),
-        subtitle: lastMessage == null ? null : Text(lastMessage!),
+        subtitle: lastMessageTime == null
+            ? null
+            : Text(
+                lastMessageTime!,
+                maxLines: 1,
+              ),
         onTap: () async {
           navigator.pushNamed(
             ChatScreen.routeName,
@@ -83,6 +85,9 @@ class ProfilePicture extends StatelessWidget {
                 child: Text(
                   firstLetter,
                   textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                 ),
               ),
       ),
