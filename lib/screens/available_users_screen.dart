@@ -9,8 +9,10 @@ class AvailableUsersScreen extends StatelessWidget {
 
   const AvailableUsersScreen({super.key});
 
-  String _name(QueryDocumentSnapshot<Map<String, dynamic>> user) {
+  List<String?> _name(QueryDocumentSnapshot<Map<String, dynamic>> user) {
     String name;
+    String? imageUrl;
+
     if (user.data().containsKey('name')) {
       name = user['name'];
     } else if (user.data().containsKey('username')) {
@@ -18,7 +20,14 @@ class AvailableUsersScreen extends StatelessWidget {
     } else {
       name = user['email'];
     }
-    return name;
+
+    if (user.data().containsKey('profile_picture')) {
+      imageUrl = user['profile_picture'];
+    }
+    return [
+      name,
+      imageUrl,
+    ];
   }
 
   @override
@@ -69,9 +78,11 @@ class AvailableUsersScreen extends StatelessWidget {
                 return SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (ctx2, index) {
+                      final userInfo = _name(usersList[index]);
                       return UserListItem(
                         uid: usersList[index]['uid'],
-                        userName: _name(usersList[index]),
+                        userName: userInfo[0]!,
+                        imageUrl: userInfo[1],
                       );
                     },
                     childCount: usersList.length,

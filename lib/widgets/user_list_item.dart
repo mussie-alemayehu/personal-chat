@@ -27,12 +27,11 @@ class UserListItem extends StatelessWidget {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundImage: imageUrl != null ? NetworkImage(imageUrl!) : null,
-          child: imageUrl != null
-              ? null
-              : Text(
-                  userName.substring(0, 1),
-                ),
+          radius: 25,
+          child: ProfilePicture(
+            firstLetter: userName.substring(0, 1),
+            imageUrl: imageUrl,
+          ),
         ),
         title: Text(userName),
         subtitle: lastMessage == null ? null : Text(lastMessage!),
@@ -45,6 +44,47 @@ class UserListItem extends StatelessWidget {
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class ProfilePicture extends StatelessWidget {
+  final String? imageUrl;
+  final String firstLetter;
+
+  // ignore: constant_identifier_names
+  static const double RADIUS = 25;
+
+  const ProfilePicture({
+    this.imageUrl,
+    required this.firstLetter,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 2 * RADIUS,
+      height: 2 * RADIUS,
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
+        borderRadius: BorderRadius.circular(RADIUS),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(RADIUS),
+        child: imageUrl != null
+            ? FadeInImage(
+                placeholder: const AssetImage('assets/person_placeholder.jpg'),
+                image: NetworkImage(imageUrl!),
+                fit: BoxFit.cover,
+              )
+            : Center(
+                child: Text(
+                  firstLetter,
+                  textAlign: TextAlign.center,
+                ),
+              ),
       ),
     );
   }

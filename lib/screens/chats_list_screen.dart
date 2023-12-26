@@ -19,7 +19,7 @@ class ChatsListScreen extends StatelessWidget {
     return snapshot1;
   }
 
-  List<String> _receiverDetails(QuerySnapshot allUsers,
+  List<String?> _receiverDetails(QuerySnapshot allUsers,
       QueryDocumentSnapshot<Map<String, dynamic>> chat) {
     final currentUserId = FirebaseAuth.instance.currentUser!.uid;
     final receiverId =
@@ -34,8 +34,12 @@ class ChatsListScreen extends StatelessWidget {
     } else {
       receiverName = receiver['email'];
     }
+    String? imageUrl;
+    if (receiver.data().containsKey('profile_picture')) {
+      imageUrl = receiver['profile_picture'];
+    }
 
-    return [receiverName, receiverId];
+    return [receiverName, receiverId, imageUrl];
   }
 
   @override
@@ -135,14 +139,18 @@ class ChatsListScreen extends StatelessWidget {
                             ),
                           if (chats.isNotEmpty)
                             ...chats.map(
-                              (chat) => UserListItem(
-                                userName: _receiverDetails(
+                              (chat) {
+                                final receiverDetails = _receiverDetails(
                                     futureSnapshot.data!,
                                     chat as QueryDocumentSnapshot<
-                                        Map<String, dynamic>>)[0],
-                                uid: _receiverDetails(
-                                    futureSnapshot.data!, chat)[1],
-                              ),
+                                        Map<String, dynamic>>);
+
+                                return UserListItem(
+                                  userName: receiverDetails[0]!,
+                                  uid: receiverDetails[1]!,
+                                  imageUrl: receiverDetails[2],
+                                );
+                              },
                             ),
                         ],
                       ),
