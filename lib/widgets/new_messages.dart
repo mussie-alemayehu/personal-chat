@@ -1,3 +1,4 @@
+import 'package:chat/models/messages.dart';
 import 'package:flutter/material.dart';
 import '../components/actions.dart' as actions;
 
@@ -91,9 +92,12 @@ class _NewMessageSenderState extends State<NewMessageSender> {
                   _isSendable = false;
                 });
                 await actions.Actions.sendMessges(
-                  chatId: widget.chatId,
-                  message: message,
-                  sentBy: widget.senderId,
+                  Message(
+                    sentBy: widget.senderId,
+                    time: DateTime.now(),
+                    text: message,
+                  ),
+                  widget.chatId,
                 );
               },
             ),

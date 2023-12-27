@@ -1,11 +1,38 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
 
+import '../models/messages.dart';
+
 class MessageBubble extends StatelessWidget {
+  final Message message;
+
+  const MessageBubble(
+    this.message, {
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser!.uid;
+    bool isMe;
+    if (currentUser == message.sentBy) {
+      isMe = true;
+    } else {
+      isMe = false;
+    }
+    return TextOnly(
+      isMe: isMe,
+      message: message.text!,
+    );
+  }
+}
+
+class TextOnly extends StatelessWidget {
   final bool isMe;
   final String message;
 
-  const MessageBubble({
+  const TextOnly({
     required this.isMe,
     required this.message,
     super.key,
@@ -31,5 +58,41 @@ class MessageBubble extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class ImageOnly extends StatelessWidget {
+  const ImageOnly({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
+}
+
+class VideoOnly extends StatelessWidget {
+  const VideoOnly({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
+}
+
+class ImageAndText extends StatelessWidget {
+  const ImageAndText({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
+}
+
+class VideoAndText extends StatelessWidget {
+  const VideoAndText({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
   }
 }

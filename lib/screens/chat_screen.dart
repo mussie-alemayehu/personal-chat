@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../models/messages.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/new_messages.dart';
 
@@ -96,9 +97,12 @@ class ChatScreen extends StatelessWidget {
                         reverse: true,
                         itemBuilder: (ctx, index) {
                           return MessageBubble(
-                            isMe: messagesCollection[index]['sentBy'] ==
-                                _currentUserId,
-                            message: messagesCollection[index]['message'],
+                            Message(
+                              sentBy: messagesCollection[index]['sentBy'],
+                              text: messagesCollection[index]['message'],
+                              time: DateTime.parse(
+                                  messagesCollection[index]['time'] as String),
+                            ),
                           );
                         },
                         itemCount: messagesCollection.length,
