@@ -19,13 +19,14 @@ class ChatsListScreen extends StatelessWidget {
     return snapshot1;
   }
 
-  List<String?> _receiverDetails(QuerySnapshot allUsers,
+  Map<String, String?> _receiverDetails(QuerySnapshot allUsers,
       QueryDocumentSnapshot<Map<String, dynamic>> chat) {
     final currentUserId = FirebaseAuth.instance.currentUser!.uid;
     final receiverId =
         currentUserId == chat['user1'] ? chat['user2'] : chat['user1'];
     final receiver = allUsers.docs.firstWhere((doc) => doc['uid'] == receiverId)
         as QueryDocumentSnapshot<Map<String, dynamic>>;
+
     String receiverName;
     if (receiver.data().containsKey('name')) {
       receiverName = receiver['name'];
@@ -34,12 +35,35 @@ class ChatsListScreen extends StatelessWidget {
     } else {
       receiverName = receiver['email'];
     }
+
     String? imageUrl;
     if (receiver.data().containsKey('profile_picture')) {
       imageUrl = receiver['profile_picture'];
     }
 
-    return [receiverName, receiverId, imageUrl];
+    String? lastMessage;
+    if (chat.data().containsKey('lastMessage')) {
+      lastMessage = chat['lastMessage'];
+    }
+
+    String? lastMessageSentBy;
+    if (chat.data().containsKey('sentBy')) {
+      lastMessageSentBy = chat['sentBy'];
+    }
+
+    String? lastMessageTime;
+    if (chat.data().containsKey('lastMessageTime')) {
+      lastMessageTime = chat['lastMessageTime'];
+    }
+
+    return {
+      'receiver_name': receiverName,
+      'receiver_id': receiverId,
+      'image_url': imageUrl,
+      'last_message': lastMessage,
+      'last_message_sent_by': lastMessageSentBy,
+      'last_message_time': lastMessageTime,
+    };
   }
 
   @override
@@ -146,9 +170,18 @@ class ChatsListScreen extends StatelessWidget {
                                         Map<String, dynamic>>);
 
                                 return UserListItem(
-                                  userName: receiverDetails[0]!,
-                                  uid: receiverDetails[1]!,
-                                  imageUrl: receiverDetails[2],
+                                  userName: receiverDetails['receiver_name']!,
+                                  uid: receiverDetails['receiver_id']!,
+                                  imageUrl: receiverDetails['image_url'],
+                                  lastMessage: receiverDetails['last_message'],
+                                  lastMessageSentBy:
+                                      receiverDetails['last_message_sent_by'],
+                                  lastMessageTime:
+                                      receiverDetails['last_message_time'] ==
+                                              null
+                                          ? null
+                                          : DateTime.tryParse(receiverDetails[
+                                              'last_message_time']!),
                                 );
                               },
                             ),

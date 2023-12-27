@@ -1,23 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
+import './displayable_time.dart';
 import '../screens/chat_screen.dart';
 
 class UserListItem extends StatelessWidget {
   final String userName;
   final String uid;
   final String? imageUrl;
-  final String? lastMessageTime;
+  final String? lastMessage;
+  final String? lastMessageSentBy;
+  final DateTime? lastMessageTime;
 
   const UserListItem({
     super.key,
     required this.userName,
     required this.uid,
     this.imageUrl,
+    this.lastMessage,
+    this.lastMessageSentBy,
     this.lastMessageTime,
   });
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser!.uid;
+    String? editedLastMessage = lastMessage;
+    if (lastMessage != null && lastMessageSentBy == currentUser) {
+      editedLastMessage = 'You: $lastMessage';
+    }
     final navigator = Navigator.of(context);
     return Container(
       margin: const EdgeInsets.only(top: 5),
@@ -30,14 +41,24 @@ class UserListItem extends StatelessWidget {
           firstLetter: userName.substring(0, 1),
           imageUrl: imageUrl,
         ),
-        title: Text(userName),
-        subtitle: lastMessageTime == null
+        title: Text(
+          userName,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        subtitle: lastMessage == null
             ? null
-            : Text(
-                lastMessageTime!,
-                maxLines: 1,
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    editedLastMessage!,
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  DisplayableTime(lastMessageTime!),
+                ],
               ),
-        onTap: () async {
+        onTap: () {
           navigator.pushNamed(
             ChatScreen.routeName,
             arguments: {
