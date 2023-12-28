@@ -82,7 +82,7 @@ class AvailableUsersScreen extends StatelessWidget {
                       return UserListItem(
                         uid: usersList[index]['uid'],
                         userName: userInfo[0]!,
-                        imageUrl: userInfo[1],
+                        profilePicture: userInfo[1],
                       );
                     },
                     childCount: usersList.length,

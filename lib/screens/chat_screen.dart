@@ -100,6 +100,7 @@ class ChatScreen extends StatelessWidget {
                             Message(
                               sentBy: messagesCollection[index]['sentBy'],
                               text: messagesCollection[index]['message'],
+                              image: messagesCollection[index]['image'],
                               time: DateTime.parse(
                                   messagesCollection[index]['time'] as String),
                             ),

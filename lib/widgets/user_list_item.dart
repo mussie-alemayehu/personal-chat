@@ -7,8 +7,10 @@ import '../screens/chat_screen.dart';
 class UserListItem extends StatelessWidget {
   final String userName;
   final String uid;
-  final String? imageUrl;
+  final String? lastMessageType;
+  final String? profilePicture;
   final String? lastMessage;
+  final String? lastMessageImage;
   final String? lastMessageSentBy;
   final DateTime? lastMessageTime;
 
@@ -16,19 +18,73 @@ class UserListItem extends StatelessWidget {
     super.key,
     required this.userName,
     required this.uid,
-    this.imageUrl,
+    this.lastMessageType,
+    this.profilePicture,
     this.lastMessage,
+    this.lastMessageImage,
     this.lastMessageSentBy,
     this.lastMessageTime,
   });
 
-  @override
-  Widget build(BuildContext context) {
+  Widget? _subtitleBuilder(BuildContext context) {
+    Widget? subtitle;
     final currentUser = FirebaseAuth.instance.currentUser!.uid;
     String? editedLastMessage = lastMessage;
     if (lastMessage != null && lastMessageSentBy == currentUser) {
       editedLastMessage = 'You: $lastMessage';
     }
+
+    if (lastMessageType == 'Text') {
+      subtitle = lastMessage == null
+          ? null
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  editedLastMessage!,
+                  maxLines: 1,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                DisplayableTime(lastMessageTime!),
+              ],
+            );
+    } else {
+      subtitle = lastMessageImage != null
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    if (lastMessageSentBy == currentUser)
+                      Text(
+                        'You: ',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    const Icon(
+                      Icons.image,
+                      size: 20,
+                      color: Colors.black54,
+                    ),
+                    const SizedBox(width: 8),
+                    if (lastMessage != null)
+                      Text(
+                        editedLastMessage!,
+                        maxLines: 1,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                  ],
+                ),
+                DisplayableTime(lastMessageTime!),
+              ],
+            )
+          : null;
+    }
+
+    return subtitle;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final navigator = Navigator.of(context);
     return Container(
       margin: const EdgeInsets.only(top: 5),
@@ -39,25 +95,13 @@ class UserListItem extends StatelessWidget {
       child: ListTile(
         leading: ProfilePicture(
           firstLetter: userName.substring(0, 1),
-          imageUrl: imageUrl,
+          profilePicture: profilePicture,
         ),
         title: Text(
           userName,
           style: Theme.of(context).textTheme.bodyMedium,
         ),
-        subtitle: lastMessage == null
-            ? null
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    editedLastMessage!,
-                    maxLines: 1,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  DisplayableTime(lastMessageTime!),
-                ],
-              ),
+        subtitle: _subtitleBuilder(context),
         onTap: () {
           navigator.pushNamed(
             ChatScreen.routeName,
@@ -73,14 +117,14 @@ class UserListItem extends StatelessWidget {
 }
 
 class ProfilePicture extends StatelessWidget {
-  final String? imageUrl;
+  final String? profilePicture;
   final String firstLetter;
 
   // ignore: constant_identifier_names
   static const double RADIUS = 25;
 
   const ProfilePicture({
-    this.imageUrl,
+    this.profilePicture,
     required this.firstLetter,
     super.key,
   });
@@ -96,10 +140,10 @@ class ProfilePicture extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(RADIUS),
-        child: imageUrl != null
+        child: profilePicture != null
             ? FadeInImage(
                 placeholder: const AssetImage('assets/person_placeholder.jpg'),
-                image: NetworkImage(imageUrl!),
+                image: NetworkImage(profilePicture!),
                 fit: BoxFit.cover,
               )
             : Center(

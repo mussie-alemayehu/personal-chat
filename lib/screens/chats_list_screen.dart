@@ -36,14 +36,19 @@ class ChatsListScreen extends StatelessWidget {
       receiverName = receiver['email'];
     }
 
-    String? imageUrl;
+    String? profilePicture;
     if (receiver.data().containsKey('profile_picture')) {
-      imageUrl = receiver['profile_picture'];
+      profilePicture = receiver['profile_picture'];
     }
 
     String? lastMessage;
     if (chat.data().containsKey('lastMessage')) {
       lastMessage = chat['lastMessage'];
+    }
+
+    String? lastMessageImage;
+    if (chat.data().containsKey('lastMessageImage')) {
+      lastMessageImage = chat['lastMessageImage'];
     }
 
     String? lastMessageSentBy;
@@ -59,10 +64,12 @@ class ChatsListScreen extends StatelessWidget {
     return {
       'receiver_name': receiverName,
       'receiver_id': receiverId,
-      'image_url': imageUrl,
+      'profile_picture': profilePicture,
       'last_message': lastMessage,
+      'last_message_image': lastMessageImage,
       'last_message_sent_by': lastMessageSentBy,
       'last_message_time': lastMessageTime,
+      'last_message_type': chat['lastMessageType'],
     };
   }
 
@@ -150,6 +157,7 @@ class ChatsListScreen extends StatelessWidget {
                           UserListItem(
                             uid: FirebaseAuth.instance.currentUser!.uid,
                             userName: 'Saved Messages',
+                            lastMessageType: 'Text',
                           ),
                           if (chats.isEmpty)
                             Container(
@@ -172,8 +180,11 @@ class ChatsListScreen extends StatelessWidget {
                                 return UserListItem(
                                   userName: receiverDetails['receiver_name']!,
                                   uid: receiverDetails['receiver_id']!,
-                                  imageUrl: receiverDetails['image_url'],
+                                  profilePicture:
+                                      receiverDetails['profile_picture'],
                                   lastMessage: receiverDetails['last_message'],
+                                  lastMessageImage:
+                                      receiverDetails['last_message_image'],
                                   lastMessageSentBy:
                                       receiverDetails['last_message_sent_by'],
                                   lastMessageTime:
@@ -182,6 +193,8 @@ class ChatsListScreen extends StatelessWidget {
                                           ? null
                                           : DateTime.tryParse(receiverDetails[
                                               'last_message_time']!),
+                                  lastMessageType:
+                                      receiverDetails['last_message_type']!,
                                 );
                               },
                             ),
