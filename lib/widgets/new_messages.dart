@@ -40,12 +40,102 @@ class _NewMessageSenderState extends State<NewMessageSender> {
     return pickedImage;
   }
 
+  Future<bool?> _confirmMessage(File image) async {
+    final mediaQuery = MediaQuery.of(context);
+    final theme = Theme.of(context);
+
+    var answer = await showDialog(
+      context: context,
+      builder: (ctx) {
+        final navigator = Navigator.of(ctx);
+        return SingleChildScrollView(
+          child: AlertDialog(
+            contentPadding: const EdgeInsets.all(3),
+            iconPadding: const EdgeInsets.all(3),
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            icon: Container(
+              color: Colors.transparent,
+              constraints: BoxConstraints(
+                maxHeight: mediaQuery.size.height * 0.7,
+                maxWidth: mediaQuery.size.width * 0.8,
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(6),
+                  topRight: Radius.circular(6),
+                ),
+                child: Image.file(
+                  image,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            content: Material(
+              child: TextFormField(
+                controller: _controller,
+                cursorColor: theme.primaryColor,
+                minLines: 1,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: 'Message...',
+                  hintStyle: theme.textTheme.bodyMedium,
+                  enabledBorder: const UnderlineInputBorder(),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(4),
+                      bottomRight: Radius.circular(4),
+                    ),
+                    borderSide: BorderSide(
+                      width: 5,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                child: Text(
+                  'Cancel',
+                  style: theme.textTheme.bodyMedium!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.primaryColor,
+                  ),
+                ),
+                onPressed: () {
+                  navigator.pop(false);
+                },
+              ),
+              TextButton(
+                child: Text(
+                  'Send',
+                  style: theme.textTheme.bodyMedium!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.primaryColor,
+                  ),
+                ),
+                onPressed: () {
+                  navigator.pop(true);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    answer = answer as bool? ?? false;
+    return answer;
+  }
+
   SnackBar _snackBarBuilder(String message) {
     return SnackBar(
       duration: const Duration(seconds: 3),
       content: Text(
         message,
-        style: theme.textTheme.bodySmall,
+        style: theme.textTheme.bodySmall!.copyWith(color: Colors.white),
       ),
       backgroundColor: theme.colorScheme.error,
     );
@@ -53,43 +143,51 @@ class _NewMessageSenderState extends State<NewMessageSender> {
 
   Future<void> _sendImage() async {
     String url;
+    String? message;
     final image = await _getImage();
+
     if (image != null) {
-      final imageName =
-          '${widget.senderId}_${DateTime.now().millisecondsSinceEpoch.toString()}.jpg';
-      final ref = FirebaseStorage.instance
-          .ref('chats_files/${widget.chatId}/$imageName');
-      try {
-        await ref.putFile(image).timeout(
-              const Duration(seconds: 10),
-            );
-      } catch (error) {
-        scaffoldMessenger.showSnackBar(
-          _snackBarBuilder('Error while uploading file.'),
-        );
-        return;
-      }
-      try {
-        url = await ref.getDownloadURL();
-      } catch (error) {
-        scaffoldMessenger.showSnackBar(
-          _snackBarBuilder('Error while fetching download url.'),
-        );
-        return;
-      }
-      try {
-        await actions.Actions.sendMessages(
-          Message(
-            sentBy: widget.senderId,
-            time: DateTime.now(),
-            image: url,
-          ),
-          widget.chatId,
-        );
-      } catch (error) {
-        scaffoldMessenger.showSnackBar(
-          _snackBarBuilder('Error while sending message.'),
-        );
+      final send = await _confirmMessage(image);
+      message = _controller.text;
+      _controller.text = '';
+      if (send != null && send) {
+        final imageName =
+            '${widget.senderId}_${DateTime.now().millisecondsSinceEpoch.toString()}.jpg';
+        final ref = FirebaseStorage.instance
+            .ref('chats_files/${widget.chatId}/$imageName');
+        try {
+          await ref.putFile(image).timeout(
+                const Duration(seconds: 10),
+              );
+        } catch (error) {
+          scaffoldMessenger.showSnackBar(
+            _snackBarBuilder('Error while uploading file.'),
+          );
+          return;
+        }
+        try {
+          url = await ref.getDownloadURL();
+        } catch (error) {
+          scaffoldMessenger.showSnackBar(
+            _snackBarBuilder('Error while fetching download url.'),
+          );
+          return;
+        }
+        try {
+          await actions.Actions.sendMessages(
+            Message(
+              sentBy: widget.senderId,
+              time: DateTime.now(),
+              image: url,
+              text: message,
+            ),
+            widget.chatId,
+          );
+        } catch (error) {
+          scaffoldMessenger.showSnackBar(
+            _snackBarBuilder('Error while sending message.'),
+          );
+        }
       }
     }
   }

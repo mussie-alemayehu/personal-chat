@@ -29,10 +29,6 @@ class UserListItem extends StatelessWidget {
   Widget? _subtitleBuilder(BuildContext context) {
     Widget? subtitle;
     final currentUser = FirebaseAuth.instance.currentUser!.uid;
-    String? editedLastMessage = lastMessage;
-    if (lastMessage != null && lastMessageSentBy == currentUser) {
-      editedLastMessage = 'You: $lastMessage';
-    }
 
     if (lastMessageType == 'Text') {
       subtitle = lastMessage == null
@@ -41,7 +37,7 @@ class UserListItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  editedLastMessage!,
+                  'You: $lastMessage',
                   maxLines: 1,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
@@ -68,7 +64,7 @@ class UserListItem extends StatelessWidget {
                     const SizedBox(width: 8),
                     if (lastMessage != null)
                       Text(
-                        editedLastMessage!,
+                        lastMessage!,
                         maxLines: 1,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
