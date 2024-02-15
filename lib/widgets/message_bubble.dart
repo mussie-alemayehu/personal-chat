@@ -67,27 +67,23 @@ class TextOnly extends StatelessWidget {
       clipper: ChatBubbleClipper4(
         type: isMe ? BubbleType.sendBubble : BubbleType.receiverBubble,
       ),
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.7,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              message,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              _hourMinute,
-              style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                    fontSize: 11,
-                  ),
-            ),
-          ],
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            message,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            _hourMinute,
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                  fontSize: 11,
+                ),
+          ),
+        ],
       ),
+      // ),
     );
   }
 }

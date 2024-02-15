@@ -33,44 +33,39 @@ class UserListItem extends StatelessWidget {
     if (lastMessageType == 'Text') {
       subtitle = lastMessage == null
           ? null
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'You: $lastMessage',
-                  maxLines: 1,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                DisplayableTime(lastMessageTime!),
-              ],
+          : Text(
+              'You: $lastMessage',
+              maxLines: 1,
+              style: Theme.of(context).textTheme.bodySmall,
             );
     } else {
       subtitle = lastMessageImage != null
           ? Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    if (lastMessageSentBy == currentUser)
-                      Text(
-                        'You: ',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    const Icon(
-                      Icons.image,
-                      size: 20,
-                      color: Colors.black54,
-                    ),
-                    const SizedBox(width: 8),
-                    if (lastMessage != null)
-                      Text(
+                if (lastMessageSentBy == currentUser)
+                  Text(
+                    'You: ',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                const Icon(
+                  Icons.image,
+                  size: 20,
+                  color: Colors.black54,
+                ),
+                if (lastMessage != null)
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
                         lastMessage!,
                         maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
-                  ],
-                ),
-                DisplayableTime(lastMessageTime!),
+                    ),
+                  ),
               ],
             )
           : null;
@@ -97,7 +92,18 @@ class UserListItem extends StatelessWidget {
           userName,
           style: Theme.of(context).textTheme.bodyMedium,
         ),
-        subtitle: _subtitleBuilder(context),
+        subtitle: (lastMessage != null || lastMessageImage != null)
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: _subtitleBuilder(context)!,
+                  ),
+                  DisplayableTime(lastMessageTime!),
+                ],
+              )
+            : null,
         onTap: () {
           navigator.pushNamed(
             ChatScreen.routeName,

@@ -18,7 +18,7 @@ class DisplayableTime extends StatelessWidget {
         time.year == now.year) {
       displayableTime = 'yest';
     } else {
-      displayableTime = DateFormat(DateFormat.MONTH_DAY).format(time);
+      displayableTime = DateFormat(DateFormat.ABBR_MONTH_DAY).format(time);
     }
     return displayableTime;
   }
